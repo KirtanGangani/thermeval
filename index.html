@@ -88,15 +88,7 @@
             align-items: center;
         }
 
-        nav .logo {
-            font-weight: 800;
-            font-size: 1.1rem;
-            letter-spacing: -0.02em;
-            background: var(--gradient-thermal);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+        /* nav .logo is styled at end of stylesheet */
 
         nav .nav-links {
             display: flex;
@@ -180,12 +172,7 @@
             margin-bottom: 1.5rem;
         }
 
-        .hero h1 .highlight {
-            background: var(--gradient-thermal);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+        /* .hero h1 .highlight is styled at end of stylesheet */
 
         .hero .subtitle {
             font-size: 1.15rem;
@@ -753,6 +740,130 @@
             font-size: 0.7rem;
             color: var(--text-muted);
         }
+
+        /* ========== LIGHT THEME ========== */
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f6f8;
+            --bg-card: #f0f0f3;
+            --bg-card-hover: #e8e8ed;
+            --text-primary: #111118;
+            --text-secondary: #44444f;
+            --text-muted: #70707e;
+            --accent: #d4440f;
+            --accent-glow: rgba(212, 68, 15, 0.1);
+            --border: rgba(0, 0, 0, 0.08);
+            --border-hover: rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="light"] nav {
+            background: rgba(255, 255, 255, 0.88);
+        }
+
+        [data-theme="light"] thead {
+            background: rgba(212, 68, 15, 0.05);
+        }
+
+        [data-theme="light"] tr:hover td {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        [data-theme="light"] .row-human td {
+            background: rgba(212, 68, 15, 0.04);
+        }
+
+        [data-theme="light"] .row-finetuned td {
+            background: rgba(0, 116, 217, 0.04);
+        }
+
+        [data-theme="light"] .row-header td {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        [data-theme="light"] .hero::before {
+            background: radial-gradient(circle, rgba(255, 107, 61, 0.06) 0%, rgba(0, 116, 217, 0.03) 50%, transparent 70%);
+        }
+
+        [data-theme="light"] .bibtex-block .copy-btn {
+            background: var(--bg-secondary);
+        }
+
+        [data-theme="light"] .stat-card .number {
+            -webkit-text-fill-color: var(--text-primary);
+            color: var(--text-primary);
+            background: none;
+        }
+
+        /* ========== THEME TOGGLE ========== */
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border-hover);
+            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle:hover {
+            color: var(--text-primary);
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .theme-toggle .fa-sun { display: none; }
+        .theme-toggle .fa-moon { display: inline-block; }
+
+        [data-theme="light"] .theme-toggle .fa-sun { display: inline-block; }
+        [data-theme="light"] .theme-toggle .fa-moon { display: none; }
+
+        /* ========== THERMEVAL TITLE TREATMENT ========== */
+        .hero h1 .highlight {
+            display: inline-block;
+            position: relative;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            -webkit-text-fill-color: var(--text-primary);
+            color: var(--text-primary);
+            background: none;
+        }
+
+        .hero h1 .highlight::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0.04em;
+            width: 100%;
+            height: 0.14em;
+            background: var(--accent);
+            border-radius: 2px;
+            opacity: 0.85;
+        }
+
+        nav .logo {
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            -webkit-text-fill-color: var(--text-primary);
+            background: none;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-right { gap: 0.75rem; }
+        }
     </style>
 </head>
 <body>
@@ -764,17 +875,23 @@
 <nav>
     <div class="nav-inner">
         <div class="logo">ThermEval</div>
-        <ul class="nav-links">
-            <li><a href="#abstract">Abstract</a></li>
-            <li><a href="#benchmark">Benchmark</a></li>
-            <li><a href="#dataset">Dataset</a></li>
-            <li><a href="#results">Results</a></li>
-            <li><a href="#findings">Findings</a></li>
-            <li><a href="#citation">Citation</a></li>
-        </ul>
-        <button class="mobile-toggle" onclick="toggleNav()" aria-label="Toggle navigation">
-            <i class="fas fa-bars"></i>
-        </button>
+        <div class="nav-right">
+            <ul class="nav-links">
+                <li><a href="#abstract">Abstract</a></li>
+                <li><a href="#benchmark">Benchmark</a></li>
+                <li><a href="#dataset">Dataset</a></li>
+                <li><a href="#results">Results</a></li>
+                <li><a href="#findings">Findings</a></li>
+                <li><a href="#citation">Citation</a></li>
+            </ul>
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark/light mode">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </button>
+            <button class="mobile-toggle" onclick="toggleNav()" aria-label="Toggle navigation">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
     </div>
 </nav>
 
@@ -1344,6 +1461,23 @@
         }
         lastScroll = scrollTop;
     });
+
+    // Theme toggle
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        const next = current === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem('thermeval-theme', next);
+    }
+
+    // Restore saved theme
+    (function() {
+        const saved = localStorage.getItem('thermeval-theme');
+        if (saved) {
+            document.documentElement.setAttribute('data-theme', saved);
+        }
+    })();
 </script>
 
 </body>
