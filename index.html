@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThermEval: A Structured Benchmark for Evaluation of Vision-Language Models on Thermal Imagery</title>
+    <meta name="description" content="ThermEval introduces a structured benchmark of ~55,000 thermal VQA pairs across 7 tasks to evaluate VLMs on thermal imagery. KDD 2026.">
+    <meta name="keywords" content="ThermEval, thermal imagery, vision language models, VLM, benchmark, KDD 2026, computer vision, thermal reasoning">
+    <meta property="og:title" content="ThermEval: Benchmarking VLMs on Thermal Imagery">
+    <meta property="og:description" content="A structured benchmark of ~55,000 thermal VQA pairs to evaluate vision-language models on thermal imagery. KDD 2026.">
+    <meta property="og:type" content="website">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Academicons + Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.4/css/academicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --thermal-hot: #ff4136;
+            --thermal-warm: #ff851b;
+            --thermal-mid: #ffdc00;
+            --thermal-cool: #7fdbff;
+            --thermal-cold: #0074d9;
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #111118;
+            --bg-card: #16161f;
+            --bg-card-hover: #1c1c28;
+            --text-primary: #f0f0f5;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6a6a7a;
+            --accent: #ff6b3d;
+            --accent-glow: rgba(255, 107, 61, 0.15);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
+            --gradient-thermal: linear-gradient(135deg, #0074d9, #7fdbff, #ffdc00, #ff851b, #ff4136);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ========== THERMAL GRADIENT BAR (top) ========== */
+        .thermal-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--gradient-thermal);
+            z-index: 1000;
+        }
+
+        /* ========== NAV ========== */
+        nav {
+            position: fixed;
+            top: 3px;
+            width: 100%;
+            z-index: 999;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(10, 10, 15, 0.85);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        nav .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav .logo {
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+            background: var(--gradient-thermal);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        nav .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            letter-spacing: 0.01em;
+        }
+
+        nav .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* ========== HERO ========== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 8rem 2rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(255, 107, 61, 0.08) 0%, rgba(0, 116, 217, 0.04) 50%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero .conference-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1.2rem;
+            border-radius: 100px;
+            border: 1px solid var(--border-hover);
+            background: var(--bg-card);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.05em;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+        }
+
+        .hero .conference-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            max-width: 900px;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 .highlight {
+            background: var(--gradient-thermal);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero .subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+            font-weight: 400;
+        }
+
+        /* Authors */
+        .authors {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.3rem 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.05rem;
+        }
+
+        .authors a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .authors a:hover {
+            color: var(--accent);
+        }
+
+        .authors .equal {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            vertical-align: super;
+        }
+
+        .affiliations {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem 2rem;
+            margin-bottom: 2.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .affiliations span {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-hover);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background: #e55a2d;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 107, 61, 0.25);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn i, .btn .ai {
+            font-size: 1.1rem;
+        }
+
+        /* ========== SECTIONS ========== */
+        section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 5rem 2rem;
+        }
+
+        .section-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .section-label::before {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        h2 {
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        /* ========== HERO FIGURE ========== */
+        .hero-figure {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem 2rem;
+        }
+
+        .hero-figure img {
+            width: 100%;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .hero-figure .caption {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ========== ABSTRACT ========== */
+        .abstract-content {
+            font-size: 1.05rem;
+            line-height: 1.85;
+            color: var(--text-secondary);
+            max-width: 850px;
+        }
+
+        .abstract-content strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* ========== STATS ROW ========== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.75rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-3px);
+        }
+
+        .stat-card .number {
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            background: var(--gradient-thermal);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            font-weight: 500;
+        }
+
+        /* ========== TASKS GRID ========== */
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        .task-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .task-card:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
+
+        .task-card .task-id {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: var(--accent-glow);
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            margin-bottom: 0.75rem;
+        }
+
+        .task-card h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .task-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ========== FULL-WIDTH IMAGE SECTIONS ========== */
+        .figure-section {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1rem 2rem 4rem;
+        }
+
+        .figure-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .figure-box img {
+            width: 100%;
+            display: block;
+        }
+
+        .figure-box .fig-caption {
+            padding: 1.25rem 1.5rem;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            border-top: 1px solid var(--border);
+        }
+
+        .figure-box .fig-caption strong {
+            color: var(--text-secondary);
+        }
+
+        /* ========== RESULTS TABLES ========== */
+        .table-container {
+            overflow-x: auto;
+            margin: 2rem 0;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+
+        thead {
+            background: rgba(255, 107, 61, 0.06);
+        }
+
+        th {
+            padding: 0.85rem 1rem;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        th:first-child, td:first-child {
+            text-align: left;
+            padding-left: 1.25rem;
+        }
+
+        td {
+            padding: 0.6rem 1rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        td:first-child {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .best-val {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .row-human td {
+            background: rgba(255, 107, 61, 0.04);
+            font-weight: 600;
+        }
+
+        .row-finetuned td {
+            background: rgba(0, 116, 217, 0.04);
+        }
+
+        .row-header td {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* ========== KEY FINDINGS ========== */
+        .findings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.25rem;
+            margin-top: 2rem;
+        }
+
+        .finding-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .finding-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .finding-card .finding-icon {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .finding-card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .finding-card p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.65;
+        }
+
+        /* ========== BIBTEX ========== */
+        .bibtex-block {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-top: 1.5rem;
+        }
+
+        .bibtex-block pre {
+            padding: 1.5rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .bibtex-block .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-hover);
+            color: var(--text-secondary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .bibtex-block .copy-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        /* ========== FOOTER ========== */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        footer p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* ========== DATASET SECTION ========== */
+        .dataset-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .dataset-feature {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            padding: 1.25rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .dataset-feature .feat-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-glow);
+            border-radius: 10px;
+            color: var(--accent);
+        }
+
+        .dataset-feature h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .dataset-feature p {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* ========== MOBILE HAMBURGER ========== */
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            cursor: pointer;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .hero { padding: 7rem 1.5rem 3rem; }
+            section { padding: 3rem 1.5rem; }
+            .figure-section { padding: 1rem 1.5rem 3rem; }
+            .nav-links { display: none; }
+            .mobile-toggle { display: block; }
+            nav .nav-inner { padding: 0.75rem 1.5rem; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .tasks-grid { grid-template-columns: 1fr; }
+            .findings-grid { grid-template-columns: 1fr; }
+            .authors { font-size: 0.95rem; }
+            .btn-row { flex-direction: column; align-items: center; }
+        }
+
+        /* ========== SCROLL ANIMATIONS ========== */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ========== DIVIDER ========== */
+        .section-divider {
+            max-width: 1100px;
+            margin: 0 auto;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ========== COMPARISON TABLE HEADER GROUP ========== */
+        .th-group {
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .sub-header {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Thermal gradient bar -->
+<div class="thermal-bar"></div>
+
+<!-- Navigation -->
+<nav>
+    <div class="nav-inner">
+        <div class="logo">ThermEval</div>
+        <ul class="nav-links">
+            <li><a href="#abstract">Abstract</a></li>
+            <li><a href="#benchmark">Benchmark</a></li>
+            <li><a href="#dataset">Dataset</a></li>
+            <li><a href="#results">Results</a></li>
+            <li><a href="#findings">Findings</a></li>
+            <li><a href="#citation">Citation</a></li>
+        </ul>
+        <button class="mobile-toggle" onclick="toggleNav()" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+</nav>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero">
+    <div class="conference-badge">
+        <span class="dot"></span>
+        KDD 2026
+    </div>
+    <h1>
+        <span class="highlight">ThermEval</span><br>
+        A Structured Benchmark for VLMs on Thermal Imagery
+    </h1>
+    <p class="subtitle">
+        Can vision-language models reason about temperature? We evaluate 25 VLMs across ~55,000 thermal VQA pairs and find critical gaps in thermal understanding.
+    </p>
+
+    <!-- Authors -->
+    <div class="authors">
+        <span><a href="mailto:shrivastavaayush@iitgn.ac.in">Ayush Shrivastava</a><span class="equal">*</span></span>
+        <span><a href="#">Kirtan Gangani</a><span class="equal">&dagger;</span></span>
+        <span><a href="#">Laksh Jain</a><span class="equal">&dagger;</span></span>
+        <span><a href="mailto:mayankgoel@cmu.edu">Mayank Goel</a></span>
+        <span><a href="mailto:nipun.batra@iitgn.ac.in">Nipun Batra</a></span>
+    </div>
+    <div class="affiliations">
+        <span>IIT Gandhinagar</span>
+        <span>Carnegie Mellon University</span>
+    </div>
+    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 2rem;">
+        <span class="equal">*</span> Corresponding author &nbsp;&nbsp; <span class="equal">&dagger;</span> Equal contribution
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+        <a href="https://arxiv.org/abs/XXXX.XXXXX" class="btn btn-primary" target="_blank">
+            <i class="ai ai-arxiv"></i> Paper
+        </a>
+        <a href="https://github.com/AyushShrivstava/ThermEval_KDD" class="btn btn-secondary" target="_blank">
+            <i class="fab fa-github"></i> Code
+        </a>
+        <a href="https://www.kaggle.com/datasets/shriayush/thermeval" class="btn btn-secondary" target="_blank">
+            <i class="fab fa-kaggle"></i> Dataset
+        </a>
+        <a href="#citation" class="btn btn-secondary">
+            <i class="fas fa-quote-left"></i> Cite
+        </a>
+    </div>
+</section>
+
+<!-- Hero Figure -->
+<div class="hero-figure fade-up">
+    <img src="static/images/ThermEval_motivation.png" alt="ThermEval motivation: thermal imagery enables critical perception tasks in settings where RGB fails, but VLMs trained predominantly on RGB exhibit systematic errors." loading="lazy">
+    <p class="caption">
+        Thermal imagery enables critical perception tasks where RGB fails, but VLMs trained predominantly on RGB exhibit systematic errors driven by modality mismatch and language priors.
+    </p>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ==================== ABSTRACT ==================== -->
+<section id="abstract" class="fade-up">
+    <div class="section-label">Abstract</div>
+    <h2>What is ThermEval?</h2>
+    <div class="abstract-content">
+        <p>
+            Vision language models (VLMs) achieve strong performance on RGB imagery, but they do not generalize to thermal images. Thermal sensing plays a critical role in settings where visible light fails, including <strong>nighttime surveillance</strong>, <strong>search and rescue</strong>, <strong>autonomous driving</strong>, and <strong>medical screening</strong>. Unlike RGB imagery, thermal images encode physical temperature rather than color or texture, requiring perceptual and reasoning capabilities that existing RGB-centric benchmarks do not evaluate.
+        </p>
+        <br>
+        <p>
+            We introduce <strong>ThermEval-B</strong>, a structured benchmark of approximately <strong>55,000 thermal visual question answering pairs</strong> designed to assess the foundational primitives required for thermal vision language understanding. ThermEval-B integrates public datasets with our newly collected <strong>ThermEval-D</strong>, the first dataset to provide <strong>dense per-pixel temperature maps</strong> with semantic body-part annotations across diverse indoor and outdoor environments.
+        </p>
+        <br>
+        <p>
+            Evaluating <strong>25 open-source and closed-source VLMs</strong>, we find that models consistently fail at temperature-grounded reasoning, degrade under colormap transformations, and default to language priors or fixed responses, with only marginal gains from prompting or supervised fine-tuning.
+        </p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="number">55K+</div>
+            <div class="label">Thermal VQA Pairs</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">25</div>
+            <div class="label">VLMs Evaluated</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">7</div>
+            <div class="label">Benchmark Tasks</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">1000+</div>
+            <div class="label">Thermal Images with Per-Pixel Temperature</div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ==================== BENCHMARK TASKS ==================== -->
+<section id="benchmark" class="fade-up">
+    <div class="section-label">Benchmark</div>
+    <h2>ThermEval-B: Seven Progressive Tasks</h2>
+    <p style="color: var(--text-secondary); max-width: 750px; margin-bottom: 1rem;">
+        The benchmark is organized from simple modality identification to complex temperature estimation, each task probing complementary aspects of thermal vision-language understanding.
+    </p>
+
+    <div class="tasks-grid">
+        <div class="task-card">
+            <span class="task-id">T1</span>
+            <h3>Modality Identification</h3>
+            <p>Can VLMs distinguish thermal images from RGB? We test binary classification using paired thermal-RGB images from FLIR and LLVIP datasets.</p>
+        </div>
+        <div class="task-card">
+            <span class="task-id">T2</span>
+            <h3>Colormap Robustness</h3>
+            <p>Do models rely on color cues or true modality understanding? We test identification under diverse colormap transformations (Magma, Viridis, Summer, Spring).</p>
+        </div>
+        <div class="task-card">
+            <span class="task-id">T3</span>
+            <h3>Human Counting</h3>
+            <p>Can VLMs count people in thermal images? We evaluate a fundamental perceptual capability using road scenes with varying pedestrian counts.</p>
+        </div>
+        <div class="task-card">
+            <span class="task-id">T4</span>
+            <h3>Colorbar Interpretation</h3>
+            <p>A prerequisite for temperature reasoning: can models detect, localize, and extract temperature ranges from embedded colorbars?</p>
+        </div>
+        <div class="task-card">
+            <span class="task-id">T5</span>
+            <h3>Thermal Reasoning</h3>
+            <p>Can models reason about relative temperatures? We test comparative reasoning across individuals and within-body-part ranking tasks.</p>
+        </div>
+        <div class="task-card">
+            <span class="task-id">T6</span>
+            <h3>Temperature Estimation</h3>
+            <p>Absolute temperature estimation at three difficulty levels: coordinate-based, pixel-based (marked locations), and region-based (semantic body parts).</p>
+        </div>
+        <div class="task-card">
+            <span class="task-id">T7</span>
+            <h3>Depth-Varying Estimation</h3>
+            <p>How does imaging distance affect temperature estimation? We evaluate at 2ft, 6ft, and 10ft to assess robustness to depth variation.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Tasks Figure -->
+<div class="figure-section fade-up">
+    <div class="figure-box">
+        <img src="static/images/ThermEval_Tasks2.png" alt="ThermEval benchmark tasks overview showing all 7 evaluation tasks" loading="lazy">
+        <div class="fig-caption">
+            <strong>Figure 2.</strong> ThermEval defines seven evaluation tasks covering modality identification (T1-T2), human counting (T3), colorbar interpretation (T4), thermal reasoning (T5), and temperature estimation (T6-T7).
+        </div>
+    </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ==================== DATASET ==================== -->
+<section id="dataset" class="fade-up">
+    <div class="section-label">Dataset</div>
+    <h2>ThermEval-D: Dense Thermal Annotations</h2>
+    <p style="color: var(--text-secondary); max-width: 800px; margin-bottom: 1rem;">
+        The first thermal dataset combining raw thermal imagery, per-pixel temperature maps, and diverse semantic body-part annotations across indoor and outdoor environments.
+    </p>
+
+    <div class="dataset-features">
+        <div class="dataset-feature">
+            <div class="feat-icon"><i class="fas fa-temperature-high"></i></div>
+            <div>
+                <h4>Per-Pixel Temperature</h4>
+                <p>Dense temperature annotations from TOPDON TC001 Plus with &plusmn;1&deg;C accuracy and sub-40 mK sensitivity.</p>
+            </div>
+        </div>
+        <div class="dataset-feature">
+            <div class="feat-icon"><i class="fas fa-users"></i></div>
+            <div>
+                <h4>35 Participants</h4>
+                <p>Diverse demographics (age 18-47, varied body types) captured with informed consent and ethics approval.</p>
+            </div>
+        </div>
+        <div class="dataset-feature">
+            <div class="feat-icon"><i class="fas fa-draw-polygon"></i></div>
+            <div>
+                <h4>Expert Annotations</h4>
+                <p>Three annotators per image with polygonal segmentations for forehead, chest, nose, and full body.</p>
+            </div>
+        </div>
+        <div class="dataset-feature">
+            <div class="feat-icon"><i class="fas fa-building"></i></div>
+            <div>
+                <h4>Diverse Environments</h4>
+                <p>Indoor and outdoor scenes: offices, labs, parks, workspaces with varied postures and activities.</p>
+            </div>
+        </div>
+        <div class="dataset-feature">
+            <div class="feat-icon"><i class="fas fa-check-double"></i></div>
+            <div>
+                <h4>High Agreement</h4>
+                <p>Inter-annotator BBox IoU 0.77, Segm. IoU 0.72, BBox Dice 0.87, Segm. Dice 0.84.</p>
+            </div>
+        </div>
+        <div class="dataset-feature">
+            <div class="feat-icon"><i class="fas fa-database"></i></div>
+            <div>
+                <h4>Open Access</h4>
+                <p>Released under CC BY-NC 4.0 on Kaggle with Croissant metadata for reproducible research.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dataset Figure -->
+<div class="figure-section fade-up">
+    <div class="figure-box">
+        <img src="static/images/ThermEval_Data.png" alt="Sample images from ThermEval-D dataset showing single and multi-person thermal scenes" loading="lazy">
+        <div class="fig-caption">
+            <strong>Figure 3.</strong> Images from ThermEval-D dataset. Top row: single-person scenes. Bottom row: multi-person scenes. Colorbars were added programmatically during task evaluation.
+        </div>
+    </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ==================== RESULTS ==================== -->
+<section id="results" class="fade-up">
+    <div class="section-label">Results</div>
+    <h2>Comprehensive Evaluation</h2>
+    <p style="color: var(--text-secondary); max-width: 800px; margin-bottom: 1rem;">
+        We evaluate 25 VLMs spanning 0.3B to 235B parameters, including open-source, closed-source, and chart-focused models. Performance is assessed under zero-shot prompting, contextual prompting, and supervised fine-tuning.
+    </p>
+
+    <!-- Table 1: Tasks 1-4 -->
+    <h3 style="margin-top: 2.5rem; margin-bottom: 0.5rem; font-size: 1.1rem;">Tasks 1-4: Modality, Counting &amp; Colorbar</h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">ACC &uarr; = higher is better. MAE &darr; = lower is better.</p>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2" style="text-align:left">Model</th>
+                    <th rowspan="2">Params</th>
+                    <th colspan="2" class="th-group">T1 (ACC &uarr;)</th>
+                    <th colspan="2" class="th-group">T2 (ACC &uarr;)</th>
+                    <th colspan="2" class="th-group">T3 (MAE &darr;)</th>
+                    <th colspan="4" class="th-group">T4</th>
+                </tr>
+                <tr>
+                    <th class="sub-header">FLIR</th>
+                    <th class="sub-header">LLVIP</th>
+                    <th class="sub-header">FLIR</th>
+                    <th class="sub-header">LLVIP</th>
+                    <th class="sub-header">FLIR</th>
+                    <th class="sub-header">LLVIP</th>
+                    <th class="sub-header">Detect</th>
+                    <th class="sub-header">Position</th>
+                    <th class="sub-header">Max</th>
+                    <th class="sub-header">Min</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="row-header"><td colspan="12">Chart-Focused Models</td></tr>
+                <tr>
+                    <td>ChartGemma</td><td>3B</td>
+                    <td>0.50</td><td>0.50</td><td>0.00</td><td>0.00</td>
+                    <td>3.04</td><td>1.25</td><td>0.48</td><td>0.45</td><td>0.04</td><td>0.03</td>
+                </tr>
+                <tr>
+                    <td>TinyCharts</td><td>3B</td>
+                    <td>0.50</td><td>0.50</td><td>0.00</td><td>0.00</td>
+                    <td>4.72</td><td>2.99</td><td>0.50</td><td>0.14</td><td>68.44</td><td>24.75</td>
+                </tr>
+                <tr>
+                    <td>ChartInstruct</td><td>7B</td>
+                    <td>0.50</td><td>0.50</td><td>0.00</td><td>0.01</td>
+                    <td>4.48</td><td>2.36</td><td>0.50</td><td>0.25</td><td>162.08</td><td>74.37</td>
+                </tr>
+                <tr class="row-header"><td colspan="12">Open-Source Models</td></tr>
+                <tr>
+                    <td>Qwen-VL 2.5</td><td>8B</td>
+                    <td class="best-val">0.99</td><td class="best-val">1.00</td><td class="best-val">0.99</td><td class="best-val">1.00</td>
+                    <td>3.55</td><td>0.89</td><td class="best-val">1.00</td><td class="best-val">1.00</td><td class="best-val">0.00</td><td class="best-val">0.00</td>
+                </tr>
+                <tr>
+                    <td>Intern-VL 3</td><td>8B</td>
+                    <td class="best-val">1.00</td><td class="best-val">1.00</td><td class="best-val">1.00</td><td class="best-val">1.00</td>
+                    <td>3.02</td><td>0.64</td><td class="best-val">1.00</td><td class="best-val">1.00</td><td>9.15</td><td>0.82</td>
+                </tr>
+                <tr>
+                    <td>LLaMA-3.2</td><td>11B</td>
+                    <td class="best-val">1.00</td><td>0.92</td><td class="best-val">1.00</td><td>0.90</td>
+                    <td>2.84</td><td>0.73</td><td class="best-val">1.00</td><td>0.91</td><td class="best-val">0.00</td><td class="best-val">0.00</td>
+                </tr>
+                <tr>
+                    <td>Intern-VL 3</td><td>38B</td>
+                    <td class="best-val">0.99</td><td class="best-val">1.00</td><td class="best-val">1.00</td><td class="best-val">1.00</td>
+                    <td>2.93</td><td class="best-val">0.48</td><td class="best-val">1.00</td><td class="best-val">1.00</td><td class="best-val">0.00</td><td class="best-val">0.00</td>
+                </tr>
+                <tr>
+                    <td>BLIP-2</td><td>8B</td>
+                    <td>0.43</td><td>0.53</td><td>0.93</td><td>0.98</td>
+                    <td>4.69</td><td>2.99</td><td>0.50</td><td>0.25</td><td>-</td><td>-</td>
+                </tr>
+                <tr class="row-header"><td colspan="12">Fine-Tuned &amp; Baselines</td></tr>
+                <tr class="row-finetuned">
+                    <td>Qwen-VL 2.5 (SFT)</td><td>8B</td>
+                    <td class="best-val">1.00</td><td class="best-val">1.00</td><td class="best-val">1.00</td><td class="best-val">1.00</td>
+                    <td>1.85</td><td>0.55</td><td class="best-val">1.00</td><td class="best-val">1.00</td><td class="best-val">0.00</td><td class="best-val">0.00</td>
+                </tr>
+                <tr class="row-human">
+                    <td>Human</td><td>--</td>
+                    <td>0.97</td><td>0.98</td><td>0.98</td><td>0.99</td>
+                    <td class="best-val">1.73</td><td class="best-val">0.30</td><td class="best-val">1.00</td><td class="best-val">1.00</td><td class="best-val">0.00</td><td class="best-val">0.00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Table 2: Tasks 5-7 -->
+    <h3 style="margin-top: 3rem; margin-bottom: 0.5rem; font-size: 1.1rem;">Tasks 5-7: Thermal Reasoning &amp; Temperature Estimation</h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">ACC &uarr; = higher is better. MAE &darr; = lower is better (in &deg;C).</p>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2" style="text-align:left">Model</th>
+                    <th rowspan="2">Params</th>
+                    <th colspan="2" class="th-group">T5 (ACC &uarr;)</th>
+                    <th colspan="3" class="th-group">T6 (MAE &darr;)</th>
+                    <th colspan="3" class="th-group">T7 (MAE &darr;)</th>
+                </tr>
+                <tr>
+                    <th class="sub-header">Double</th>
+                    <th class="sub-header">Single</th>
+                    <th class="sub-header">Coords</th>
+                    <th class="sub-header">Marker</th>
+                    <th class="sub-header">Region</th>
+                    <th class="sub-header">2ft</th>
+                    <th class="sub-header">6ft</th>
+                    <th class="sub-header">10ft</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Phi-3</td><td>4B</td>
+                    <td>0.56</td><td>0.22</td><td>3.49</td><td>3.92</td><td>2.26</td><td>1.19</td><td>1.14</td><td>1.25</td>
+                </tr>
+                <tr>
+                    <td>Qwen-VL 2</td><td>8B</td>
+                    <td>0.41</td><td>0.51</td><td>2.14</td><td>3.68</td><td>2.01</td><td>1.25</td><td>1.00</td><td>0.89</td>
+                </tr>
+                <tr>
+                    <td>Qwen-VL 2.5</td><td>8B</td>
+                    <td>0.44</td><td>0.32</td><td>3.21</td><td>2.88</td><td>2.14</td><td>1.26</td><td>0.93</td><td>0.87</td>
+                </tr>
+                <tr>
+                    <td>LLaMA-3.2</td><td>11B</td>
+                    <td>0.61</td><td>0.42</td><td>3.00</td><td>3.99</td><td>3.03</td><td>2.39</td><td>1.74</td><td>1.48</td>
+                </tr>
+                <tr>
+                    <td>Intern-VL 3</td><td>38B</td>
+                    <td>0.48</td><td>0.41</td><td>2.97</td><td>3.63</td><td>1.51</td><td>0.89</td><td>0.97</td><td>0.98</td>
+                </tr>
+                <tr>
+                    <td>Qwen A22</td><td>235B</td>
+                    <td>0.54</td><td>0.34</td><td>3.59</td><td>3.72</td><td>3.59</td><td>1.23</td><td>1.23</td><td>1.40</td>
+                </tr>
+                <tr class="row-header"><td colspan="11">Closed-Source Models</td></tr>
+                <tr>
+                    <td>Gemini 3 Pro</td><td>?</td>
+                    <td class="best-val">0.74</td><td>0.61</td><td>1.94</td><td>1.86</td><td>1.47</td><td>1.00</td><td>0.74</td><td>0.90</td>
+                </tr>
+                <tr>
+                    <td>Gemini 3 Flash</td><td>?</td>
+                    <td>0.55</td><td>0.51</td><td>1.96</td><td>2.04</td><td>1.65</td><td>1.19</td><td>1.00</td><td>1.21</td>
+                </tr>
+                <tr class="row-header"><td colspan="11">Fine-Tuned &amp; Baselines</td></tr>
+                <tr class="row-finetuned">
+                    <td>Qwen-VL 2.5 (SFT)</td><td>7B</td>
+                    <td>0.58</td><td>0.56</td><td class="best-val">1.58</td><td class="best-val">1.55</td><td class="best-val">1.03</td><td class="best-val">0.53</td><td class="best-val">0.49</td><td class="best-val">0.61</td>
+                </tr>
+                <tr class="row-human">
+                    <td>Human</td><td>--</td>
+                    <td class="best-val">0.84</td><td>0.54</td><td>--</td><td>2.73</td><td>2.04</td><td>1.23</td><td>1.20</td><td>1.22</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ==================== KEY FINDINGS ==================== -->
+<section id="findings" class="fade-up">
+    <div class="section-label">Key Findings</div>
+    <h2>What We Discovered</h2>
+
+    <div class="findings-grid">
+        <div class="finding-card">
+            <div class="finding-icon" style="color: var(--thermal-hot);">
+                <i class="fas fa-brain"></i>
+            </div>
+            <h3>Language Priors Over Thermal Cues</h3>
+            <p>Models default to canonical values like 36.8&deg;C (body temperature) or fixed outputs like 0&deg;C, 273 K, or "11" regardless of the actual thermal scene, indicating reliance on language priors rather than visual grounding.</p>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon" style="color: var(--thermal-warm);">
+                <i class="fas fa-palette"></i>
+            </div>
+            <h3>Colormap Vulnerability</h3>
+            <p>While VLMs handle basic modality identification well, complex colormaps (Summer, Spring) cause significant performance drops, suggesting models rely on low-level color statistics rather than modality-invariant representations.</p>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon" style="color: var(--thermal-mid);">
+                <i class="fas fa-expand-arrows-alt"></i>
+            </div>
+            <h3>Scale Doesn't Solve It</h3>
+            <p>Failure modes persist across model scales from 0.3B to 235B parameters. InternVL 3 (38B) lags behind its 8B variant on some tasks. The bottleneck is cross-modal grounding, not model capacity.</p>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon" style="color: var(--thermal-cool);">
+                <i class="fas fa-link"></i>
+            </div>
+            <h3>Cascading Task Failures</h3>
+            <p>Models that fail at colorbar interpretation (T4) consistently underperform on downstream temperature tasks (T6-T7), demonstrating that errors on prerequisite tasks predict failures on complex thermal reasoning.</p>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon" style="color: var(--thermal-cold);">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h3>Fine-Tuning Helps, But Not Enough</h3>
+            <p>Supervised fine-tuning of Qwen-VL 2.5 brings near-human performance on most tasks, but 1-2&deg;C errors remain in temperature estimation -- insufficient for safety-critical applications like fever screening.</p>
+        </div>
+        <div class="finding-card">
+            <div class="finding-icon" style="color: #b388ff;">
+                <i class="fas fa-comment-slash"></i>
+            </div>
+            <h3>Prompting Has Limits</h3>
+            <p>Contextual prompts improve basic modality recognition (+37% on T2) but yield inconsistent or negative effects on thermal reasoning (T5-T7), showing that prompt engineering cannot compensate for missing thermal grounding.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Colormap Figure -->
+<div class="figure-section fade-up">
+    <div class="figure-box">
+        <img src="static/images/colormapped_images.png" alt="Thermal images under various colormap transformations" loading="lazy">
+        <div class="fig-caption">
+            <strong>Figure 4.</strong> Thermal images rendered under different colormap transformations. While the underlying thermal signal is unchanged, visual appearance varies dramatically, confusing many VLMs.
+        </div>
+    </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ==================== CITATION ==================== -->
+<section id="citation" class="fade-up">
+    <div class="section-label">Citation</div>
+    <h2>BibTeX</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 1rem;">If you find ThermEval useful in your research, please cite our paper.</p>
+    <div class="bibtex-block">
+        <button class="copy-btn" onclick="copyBibtex()">
+            <i class="fas fa-copy"></i> Copy
+        </button>
+        <pre><code>@inproceedings{shrivastava2026thermeval,
+  title     = {ThermEval: A Structured Benchmark for Evaluation of
+               Vision-Language Models on Thermal Imagery},
+  author    = {Shrivastava, Ayush and Gangani, Kirtan and Jain, Laksh
+               and Goel, Mayank and Batra, Nipun},
+  booktitle = {Proceedings of the 32nd ACM SIGKDD Conference on
+               Knowledge Discovery and Data Mining (KDD)},
+  year      = {2026}
+}</code></pre>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ==================== ACKNOWLEDGMENTS ==================== -->
+<section class="fade-up" style="padding-bottom: 3rem;">
+    <div class="section-label">Acknowledgments</div>
+    <p style="color: var(--text-secondary); max-width: 750px; font-size: 0.95rem;">
+        We acknowledge Google for providing access to the Gemini Academic Program Award, which enabled us to run and evaluate the Gemini models reported in this work. The study was approved by the Institutional Ethics Committee (IEC) at IIT Gandhinagar.
+    </p>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer>
+    <p>
+        ThermEval &copy; 2026 &middot;
+        <a href="https://iitgn.ac.in" target="_blank">IIT Gandhinagar</a> &amp;
+        <a href="https://www.cmu.edu" target="_blank">Carnegie Mellon University</a>
+        <br>
+        <a href="https://github.com/AyushShrivstava/ThermEval_KDD" target="_blank">GitHub</a> &middot;
+        <a href="https://www.kaggle.com/datasets/shriayush/thermeval" target="_blank">Kaggle Dataset</a> &middot;
+        <a href="https://arxiv.org/abs/XXXX.XXXXX" target="_blank">arXiv</a>
+    </p>
+</footer>
+
+<script>
+    // Scroll animation observer
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // Copy BibTeX
+    function copyBibtex() {
+        const text = document.querySelector('.bibtex-block code').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            }, 2000);
+        });
+    }
+
+    // Mobile nav toggle
+    function toggleNav() {
+        const links = document.querySelector('.nav-links');
+        links.style.display = links.style.display === 'flex' ? 'none' : 'flex';
+        if (links.style.display === 'flex') {
+            links.style.flexDirection = 'column';
+            links.style.position = 'absolute';
+            links.style.top = '100%';
+            links.style.right = '1.5rem';
+            links.style.background = 'var(--bg-secondary)';
+            links.style.padding = '1rem 1.5rem';
+            links.style.borderRadius = '12px';
+            links.style.border = '1px solid var(--border)';
+            links.style.gap = '1rem';
+        }
+    }
+
+    // Smooth scroll for nav links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Close mobile nav
+                const links = document.querySelector('.nav-links');
+                if (window.innerWidth <= 768) {
+                    links.style.display = 'none';
+                }
+            }
+        });
+    });
+
+    // Nav scroll effect
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+        const nav = document.querySelector('nav');
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        if (scrollTop > 100) {
+            nav.style.borderBottomColor = 'rgba(255,255,255,0.08)';
+        } else {
+            nav.style.borderBottomColor = 'rgba(255,255,255,0.06)';
+        }
+        lastScroll = scrollTop;
+    });
+</script>
+
+</body>
+</html>
